@@ -23,6 +23,12 @@ api = OllamaAPI(system_prompt=system_prompt, debug=True)
 
 @app.route("/chat", methods=["POST"])
 def chat():
+    """
+    Chat endpoint for interacting with the chatbot.
+
+    This endpoint accepts a POST request with a JSON body containing a session ID and a message.
+    The chatbot will respond with a message.
+    """
     data = flask.request.json
     try:
         session_id = data["session_id"]
@@ -37,5 +43,10 @@ def chat():
 
 @app.route("/new_session_id", methods=["GET"])
 def new_session_id():
+    """
+    New session ID endpoint for generating a new session ID.
+
+    This endpoint accepts a GET request and returns a new session ID.
+    """
     session_id = api.generate_session_id()
     return flask.jsonify({"session_id": session_id})
