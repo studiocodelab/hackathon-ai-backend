@@ -65,3 +65,4 @@ Zapytanie POST na `/ollama` z JSON-em w formacie:
     "message": "TREŚĆ_ZAPYTANIA"
 }
 ```
+ID_SESJI - ID sesji zwrócone przez `/new_session_id`
