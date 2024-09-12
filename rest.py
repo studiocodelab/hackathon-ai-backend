@@ -30,7 +30,7 @@ def chat():
     The chatbot will respond with a message.
     """
     data = flask.request.json
-    if session_id not in api.history:
+    if data["session_id"] not in api.history:
         return flask.jsonify(
             {
                 "error": "Invalid session ID, please get a new session ID (/new_session_id)"
