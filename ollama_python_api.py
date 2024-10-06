@@ -6,7 +6,10 @@ This module provides a simple API for interacting with the Ollama chatbot.
 """
 
 import logging as lg
+import time
 import uuid
+
+from typing import Any
 
 # import flask
 import ollama
@@ -40,6 +43,7 @@ class OllamaAPI:
             self.logger.setLevel(lg.INFO)
 
         self.model = model
+        self.session_ids: dict[str, int] = {}
 
         self.system_prompt: dict[str, str] = {
             "role": "system",
@@ -68,8 +72,21 @@ class OllamaAPI:
         self.logger.debug("Generating new session ID...")
         _uuid = str(uuid.uuid4())
         self.history[_uuid] = []
+        self.session_ids[_uuid] = time.time()
         self.logger.debug(f"Generated session ID: {_uuid}")
         return _uuid
+
+    def cleanup(self) -> None:
+        """
+        Cleanup old session IDs.
+        """
+        timeout = 60 * 60  # 1 hour
+        self.logger.debug(f"Cleaning up session IDs older than {timeout} seconds...")
+        for session_id, timestamp in self.session_ids.items():
+            if time.time() - timestamp > timeout:
+                self.logger.info(f"Cleaning up session ID: {session_id}")
+                del self.session_ids[session_id]
+                del self.history[session_id]
 
     def chat(self, session_id: str, text: str) -> str:
         """
@@ -79,8 +96,11 @@ class OllamaAPI:
             session_id (str): The session ID.
             text (str): The user input text.
         """
-        self.logger.info(f"User input: {text}")
+        self.logger.debug("Cleaning up old session IDs...")
+        self.cleanup()
+        self.logger.info(f"User input (id: {session_id}): {text}")
         self._update_history(session_id, {"role": "user", "content": text})
+        self.session_ids[session_id] = time.time()
 
         messages = (
             [self.system_prompt] + self.history[session_id] + [{"role": "user", "content": text}]
