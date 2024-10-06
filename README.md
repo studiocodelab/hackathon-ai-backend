@@ -66,3 +66,35 @@ Zapytanie POST na `/ollama` z JSON-em w formacie:
 }
 ```
 ID_SESJI - ID sesji zwrócone przez `/new_session_id`
+
+### Wrzucenie pliku do storage'u
+
+Zapytanie POST na `/storage/push` z JSON-em w formacie:
+```json
+{
+    "filename": "NAZWA_PLIKU",
+    "data": "ZAWARTOŚĆ_PLIKU"
+}
+```
+
+### Pobranie pliku z storage'u
+
+Zapytanie POST na `/storage/pull` z JSON-em w formacie:
+```json
+{
+    "filename": "NAZWA_PLIKU"
+}
+```
+
+### Usunięcie pliku z storage'u
+
+Zapytanie POST na `/storage/delete` z JSON-em w formacie:
+```json
+{
+    "filename": "NAZWA_PLIKU"
+}
+```
+
+### Pobranie listy plików w storage'u
+
+Zapytanie GET na `/storage/list`
