@@ -18,7 +18,7 @@ class Storage:
     def store(self, filename: str, data: Any):
         """Store the data in the file."""
         self.logger.info(f"Storing {filename}")
-        self._files[filename] = base64.b64encode(data)
+        self._files[filename] = base64.b64encode(data.encode())
 
     def retrieve(self, filename: str):
         """Retrieve the data from the file."""
