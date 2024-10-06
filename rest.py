@@ -60,7 +60,7 @@ def new_session_id():
     return flask.jsonify({"session_id": session_id})
 
 
-@app.route("/storage/store", methods=["POST"])
+@app.route("/storage/push", methods=["POST"])
 def store():
     """
     Store endpoint for storing data in the storage.
@@ -78,7 +78,7 @@ def store():
     return flask.jsonify({"message": "Data stored successfully"})
 
 
-@app.route("/storage/retrieve", methods=["POST"])
+@app.route("/storage/pull", methods=["POST"])
 def retrieve():
     """
     Retrieve endpoint for retrieving data from the storage.
@@ -98,7 +98,7 @@ def retrieve():
         return flask.jsonify({"error": "File not found"})
 
 
-@app.route("/storage/delete", methods=["POST"])
+@app.route("/storage/pop", methods=["POST"])
 def delete():
     """
     Delete endpoint for deleting data from the storage.
