@@ -25,6 +25,7 @@ class OllamaAPI:
 
     This class provides a simple API for interacting with the Ollama chatbot.
     """
+
     def __init__(
         self, model: str = "llama3.1", system_prompt: str = "", debug: bool = False
     ) -> None:
@@ -103,7 +104,7 @@ class OllamaAPI:
         self.session_ids[session_id] = time.time()
 
         messages = (
-            [self.system_prompt] + self.history[session_id] + [{"role": "user", "content": text}]
+            [self.system_prompt] + self.history[session_id] + [{"role": "user", "content": text}]  # fmt: skip
         )
         self.logger.debug(f"History: {self.history}")
         response = ollama.chat(self.model, messages)
@@ -119,7 +120,7 @@ def pretty_print(response: dict[str, str]) -> None:
     Args:
         response (dict): The chat response.
     """
-    print(f"{response["message"]['role']}: {response["message"]['content']}")
+    print(f"{response['message']['role']}: {response['message']['content']}")
 
 
 if __name__ == "__main__":  # test the API
