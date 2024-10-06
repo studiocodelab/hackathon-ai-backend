@@ -5,6 +5,7 @@ import logging as lg
 import flask
 
 from ollama_python_api import OllamaAPI
+from storage import Storage
 
 lg.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -19,6 +20,7 @@ with open("system_prompt.txt", "r") as f:
 
 # Initialize the OllamaAPI object
 api = OllamaAPI(system_prompt=system_prompt, debug=True)
+storage = Storage()
 
 
 @app.route("/chat", methods=["POST"])
@@ -56,3 +58,72 @@ def new_session_id():
     """
     session_id = api.generate_session_id()
     return flask.jsonify({"session_id": session_id})
+
+
+@app.route("/storage/store", methods=["POST"])
+def store():
+    """
+    Store endpoint for storing data in the storage.
+
+    This endpoint accepts a POST request with a JSON body containing a filename and data.
+    """
+    data = flask.request.json
+    try:
+        filename = data["filename"]
+        data = data["data"]
+    except (KeyError, TypeError):
+        return flask.jsonify({"error": "Invalid request format"})
+
+    storage.store(filename, data)
+    return flask.jsonify({"message": "Data stored successfully"})
+
+
+@app.route("/storage/retrieve", methods=["POST"])
+def retrieve():
+    """
+    Retrieve endpoint for retrieving data from the storage.
+
+    This endpoint accepts a POST request with a JSON body containing a filename.
+    """
+    data = flask.request.json
+    try:
+        filename = data["filename"]
+    except (KeyError, TypeError):
+        return flask.jsonify({"error": "Invalid request format"})
+
+    try:
+        data = storage.retrieve(filename)
+        return flask.jsonify({"data": data.decode()})
+    except KeyError:
+        return flask.jsonify({"error": "File not found"})
+
+
+@app.route("/storage/delete", methods=["POST"])
+def delete():
+    """
+    Delete endpoint for deleting data from the storage.
+
+    This endpoint accepts a POST request with a JSON body containing a filename.
+    """
+    data = flask.request.json
+    try:
+        filename = data["filename"]
+    except (KeyError, TypeError):
+        return flask.jsonify({"error": "Invalid request format"})
+
+    try:
+        storage.delete(filename)
+        return flask.jsonify({"message": "File deleted successfully"})
+    except KeyError:
+        return flask.jsonify({"error": "File not found"})
+
+
+@app.route("/storage/list", methods=["GET"])
+def list_files():
+    """
+    List endpoint for listing files in the storage.
+
+    This endpoint accepts a GET request and returns a list of filenames.
+    """
+    files = storage.list()
+    return flask.jsonify({"files": list(files)})
