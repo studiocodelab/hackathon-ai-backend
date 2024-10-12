@@ -42,10 +42,11 @@ def chat():
     try:
         session_id = data["session_id"]
         text = data["message"]
+        context = data["context"]
     except (KeyError, TypeError):
         return flask.jsonify({"error": "Invalid request format"})
 
-    response = api.chat(session_id, text)
+    response = api.chat(session_id, text, context)
     return flask.jsonify(response)
 
 
