@@ -10,14 +10,20 @@ import time
 import uuid
 
 from typing import Any
-from translate import translate
+
+from langdetect import detect
 
 # import flask
 import ollama
 
+from translate import translate
+
 lg.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
+
+LANGUAGES: list[str] = ["pl", "en"]
+FALLBACK_LANGUAGE: str = "pl"
 
 
 class OllamaAPI:
@@ -90,14 +96,13 @@ class OllamaAPI:
                 del self.session_ids[session_id]
                 del self.history[session_id]
 
-    def chat(self, session_id: str, text: str, target_lang: str, context: str) -> str:
+    def chat(self, session_id: str, text: str, context: str) -> str:
         """
         Chat with the Ollama chatbot.
 
         Args:
             session_id (str): The session ID.
             text (str): The user input text.
-            target_lang (str): The target language for the response.
             context (str): The context for the response, CSV string.
 
         Example `context`:
@@ -109,23 +114,34 @@ class OllamaAPI:
         """
         self.logger.debug("Cleaning up old session IDs...")
         self.cleanup()
+        self.logger.debug(f"Detecting language of user input...")
+        lang_supported = detect(text) in LANGUAGES
+        if lang_supported:
+            message_lang = detect(text)
+            self.logger.debug(f"Detected language: {message_lang}")
+        else:
+            message_lang = FALLBACK_LANGUAGE
+            self.logger.warning(f"Could not detect language, falling back to {FALLBACK_LANGUAGE}")
         self.logger.info(f"User input (id: {session_id}): {text}")
         self._update_history(session_id, {"role": "user", "content": text})
         self.session_ids[session_id] = time.time()
 
         context_system_prompt: dict[str, str] = {
             "role": "system",
-            "content": "<<DATA>>\n" + context + "\n<<END_DATA>>",
+            "content": "<<DATA>>\n" + context + "\n<<END_DATA>>"
         }
+
+        self.system_prompt["content"] += f"Current datetime: {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
 
         messages = (
             [self.system_prompt, context_system_prompt] + self.history[session_id] + [{"role": "user", "content": text}]  # fmt: skip
         )
         self.logger.debug(f"History: {self.history}")
         response = ollama.chat(self.model, messages)
-
-        #translated_response = translate(response["message"]["content"], target_lang).text
-        #response["message"]["content"] = translated_response
+        
+        if message_lang != "en":
+            translated_response = translate(response["message"]["content"], message_lang).text
+            response["message"]["content"] = translated_response
 
         self._update_history(session_id, response["message"])
         return response
