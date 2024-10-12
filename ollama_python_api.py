@@ -51,7 +51,8 @@ class OllamaAPI:
             self.logger.setLevel(lg.INFO)
 
         self.model = model
-        self.session_ids: dict[str, int] = {}
+        self.session_id_timestamps: dict[str, int] = {}
+        self.session_id_contexts: dict[str, str] = {}
 
         self.system_prompt: dict[str, str] = {
             "role": "system",
@@ -80,29 +81,15 @@ class OllamaAPI:
         self.logger.debug("Generating new session ID...")
         _uuid = str(uuid.uuid4())
         self.history[_uuid] = []
-        self.session_ids[_uuid] = time.time()
+        self.session_id_timestamps[_uuid] = time.time()
         self.logger.debug(f"Generated session ID: {_uuid}")
         return _uuid
-
-    def cleanup(self) -> None:
+    
+    def new_session(self, context: str) -> str:
         """
-        Cleanup old session IDs.
-        """
-        timeout = 60 * 60  # 1 hour
-        self.logger.debug(f"Cleaning up session IDs older than {timeout} seconds...")
-        for session_id, timestamp in list(self.session_ids.items()).copy():
-            if time.time() - timestamp > timeout:
-                self.logger.info(f"Cleaning up session ID: {session_id}")
-                del self.session_ids[session_id]
-                del self.history[session_id]
-
-    def chat(self, session_id: str, text: str, context: str) -> str:
-        """
-        Chat with the Ollama chatbot.
+        Create a new session.
 
         Args:
-            session_id (str): The session ID.
-            text (str): The user input text.
             context (str): The context for the response, CSV string.
 
         Example `context`:
@@ -111,6 +98,50 @@ class OllamaAPI:
         team meeting;discuss project progress;2022-12-31 12:00:00;conference room 1
         h&s training;compliance training;2023-01-01 09:00:00;training room 2
         "
+        """
+        session_id = self.generate_session_id()
+        self.logger.info(f"Created new session (id: {session_id})")
+        context_system_prompt: dict[str, dict[str, str]] = {
+            "role": "system",
+            "content": "\n<<DATA>>\n" + context + "\n<<END_DATA>>"
+        }
+        self.session_id_contexts[session_id] = context_system_prompt
+
+        return session_id
+
+    def get_session_context(self, session_id: str) -> str:
+        """
+        Get the context of the session.
+
+        Args:
+            session_id (str): The session ID.
+
+        Returns:
+            str: The context of the session.
+        """
+        return self.session_id_contexts[session_id]
+
+
+    def cleanup(self) -> None:
+        """
+        Cleanup old session IDs.
+        """
+        timeout = 60 * 60  # 1 hour
+        self.logger.debug(f"Cleaning up session IDs older than {timeout} seconds...")
+        for session_id, timestamp in list(self.session_id_timestamps.items()).copy():
+            if time.time() - timestamp > timeout:
+                self.logger.info(f"Cleaning up session ID: {session_id}")
+                del self.session_id_timestamps[session_id]
+                del self.session_id_contexts[session_id]
+                del self.history[session_id]
+
+    def chat(self, session_id: str, text: str) -> str:
+        """
+        Chat with the Ollama chatbot.
+
+        Args:
+            session_id (str): The session ID.
+            text (str): The user input text.
         """
         self.logger.debug("Cleaning up old session IDs...")
         self.cleanup()
@@ -124,26 +155,25 @@ class OllamaAPI:
             self.logger.warning(f"Could not detect language, falling back to {FALLBACK_LANGUAGE}")
         self.logger.info(f"User input (id: {session_id}): {text}")
         self._update_history(session_id, {"role": "user", "content": text})
-        self.session_ids[session_id] = time.time()
+        self.session_id_timestamps[session_id] = time.time()
 
-        context_system_prompt: dict[str, str] = {
-            "role": "system",
-            "content": "<<DATA>>\n" + context + "\n<<END_DATA>>"
-        }
+        self.system_prompt["content"] += f"Current datetime: {time.strftime('%Y-%m-%d %H:%M:%S')}; day name (today): {time.strftime('%A')}"
 
-        self.system_prompt["content"] += f"Current datetime: {time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+        context_system_prompt = self.get_session_context(session_id)
+        context_system_prompt["content"] += f"\n\nCurrent datetime: {time.strftime('%Y-%m-%d %H:%M:%S')}; day name (today): {time.strftime('%A')}"
 
         messages = (
-            [self.system_prompt, context_system_prompt] + self.history[session_id] + [{"role": "user", "content": text}]  # fmt: skip
+            [context_system_prompt] + [{"role": "user", "content": text}]  # fmt: skip
         )
         self.logger.debug(f"History: {self.history}")
+
         response = ollama.chat(self.model, messages)
         
-        if message_lang != "en":
-            translated_response = translate(response["message"]["content"], message_lang).text
+        if message_lang not in ["en", "ca"]:
+            translated_response = translate(response["message"]["content"], message_lang)
             response["message"]["content"] = translated_response
 
-        self._update_history(session_id, response["message"])
+        self._update_history(session_id, response)
         return response
 
 
