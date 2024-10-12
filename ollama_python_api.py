@@ -10,6 +10,7 @@ import time
 import uuid
 
 from typing import Any
+from translate import translate
 
 # import flask
 import ollama
@@ -89,7 +90,7 @@ class OllamaAPI:
                 del self.session_ids[session_id]
                 del self.history[session_id]
 
-    def chat(self, session_id: str, text: str, context: str) -> str:
+    def chat(self, session_id: str, text: str, target_lang: str, context: str) -> str:
         """
         Chat with the Ollama chatbot.
 
@@ -122,6 +123,9 @@ class OllamaAPI:
         )
         self.logger.debug(f"History: {self.history}")
         response = ollama.chat(self.model, messages)
+
+        #translated_response = translate(response["message"]["content"], target_lang).text
+        #response["message"]["content"] = translated_response
 
         self._update_history(session_id, response["message"])
         return response
