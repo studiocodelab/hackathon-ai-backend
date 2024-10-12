@@ -115,7 +115,7 @@ class OllamaAPI:
 
         context_system_prompt: dict[str, str] = {
             "role": "system",
-            "content": "<<DATA>>\n" + context,
+            "content": "<<DATA>>\n" + context + "\n<<END_DATA>>",
         }
 
         messages = (
