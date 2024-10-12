@@ -25,7 +25,7 @@ def translate(text: str, target_lang: str) -> str:
     )
     glossary = glossary_en_pl if target_lang == "PL" else None
     logger.debug(f"Using glossary: {glossary}")
-    return translator.translate_text(text, target_lang=target_lang, formality="more", glossary=glossary)
+    return translator.translate_text(text, target_lang=target_lang, formality="more", glossary=glossary).text
 
 
 if __name__ == "__main__":
