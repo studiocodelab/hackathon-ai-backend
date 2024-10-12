@@ -83,7 +83,7 @@ class OllamaAPI:
         """
         timeout = 60 * 60  # 1 hour
         self.logger.debug(f"Cleaning up session IDs older than {timeout} seconds...")
-        for session_id, timestamp in self.session_ids.items():
+        for session_id, timestamp in list(self.session_ids.items()).copy():
             if time.time() - timestamp > timeout:
                 self.logger.info(f"Cleaning up session ID: {session_id}")
                 del self.session_ids[session_id]
