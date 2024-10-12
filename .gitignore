@@ -23,3 +23,6 @@ venv.bak/
 # Log files
 logs/
 *.log
+
+# storage
+stored_files/
