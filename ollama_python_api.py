@@ -22,8 +22,8 @@ lg.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
-LANGUAGES: list[str] = ["pl", "en"]
-FALLBACK_LANGUAGE: str = "pl"
+LANGUAGES: list[str] = ["pl", "en", "ca"]
+FALLBACK_LANGUAGE: str = "en"
 
 
 class OllamaAPI:
