@@ -89,13 +89,22 @@ class OllamaAPI:
                 del self.session_ids[session_id]
                 del self.history[session_id]
 
-    def chat(self, session_id: str, text: str) -> str:
+    def chat(self, session_id: str, text: str, context: str) -> str:
         """
         Chat with the Ollama chatbot.
 
         Args:
             session_id (str): The session ID.
             text (str): The user input text.
+            target_lang (str): The target language for the response.
+            context (str): The context for the response, CSV string.
+
+        Example `context`:
+        "
+        meeting_name;meeting_purpose;datetime;location
+        team meeting;discuss project progress;2022-12-31 12:00:00;conference room 1
+        h&s training;compliance training;2023-01-01 09:00:00;training room 2
+        "
         """
         self.logger.debug("Cleaning up old session IDs...")
         self.cleanup()
@@ -103,8 +112,13 @@ class OllamaAPI:
         self._update_history(session_id, {"role": "user", "content": text})
         self.session_ids[session_id] = time.time()
 
+        context_system_prompt: dict[str, str] = {
+            "role": "system",
+            "content": "<<DATA>>\n" + context,
+        }
+
         messages = (
-            [self.system_prompt] + self.history[session_id] + [{"role": "user", "content": text}]  # fmt: skip
+            [self.system_prompt, context_system_prompt] + self.history[session_id] + [{"role": "user", "content": text}]  # fmt: skip
         )
         self.logger.debug(f"History: {self.history}")
         response = ollama.chat(self.model, messages)
