@@ -42,22 +42,28 @@ def chat():
     try:
         session_id = data["session_id"]
         text = data["message"]
-        context = data["context"]
     except (KeyError, TypeError):
         return flask.jsonify({"error": "Invalid request format"})
 
-    response = api.chat(session_id, text, context)
+    response = api.chat(session_id, text)
     return flask.jsonify(response)
 
 
-@app.route("/new_session_id", methods=["GET"])
+@app.route("/new_session_id", methods=["POST"])
 def new_session_id():
     """
     New session ID endpoint for generating a new session ID.
 
     This endpoint accepts a GET request and returns a new session ID.
     """
-    session_id = api.generate_session_id()
+    data = flask.request.json
+
+    try:
+        _ = data["context"]
+    except (KeyError, TypeError):
+        return flask.jsonify({"error": "Invalid request format, please provide a context"})
+
+    session_id = api.new_session(data["context"])
     return flask.jsonify({"session_id": session_id})
 
 
