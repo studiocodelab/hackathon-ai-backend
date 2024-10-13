@@ -1,8 +1,6 @@
-# ollama_python_api
+# Digital Training Manager - Backend AI
 
-## Backend AI dla Digital Training Assistant (PPPT, projekt 8)
-
-API dla Ollama ze wsparciem (pseudo)sesji
+## PPPT, projekt 8
 
 ## Autorzy
 
