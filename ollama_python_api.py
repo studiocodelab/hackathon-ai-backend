@@ -154,6 +154,12 @@ class OllamaAPI:
         else:
             message_lang = FALLBACK_LANGUAGE
             self.logger.warning(f"Could not detect language, falling back to {FALLBACK_LANGUAGE}")
+
+        self.logger.info(f"Translating user input to English...")
+        if message_lang not in ["en", "ca"]:
+            text = translate(text, "EN-US")
+            self.logger.debug(f"Translated user input: {text}")
+
         self.logger.info(f"User input (id: {session_id}): {text}")
         self._update_history(session_id, {"role": "user", "content": text})
         self.session_id_timestamps[session_id] = time.time()
