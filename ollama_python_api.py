@@ -105,6 +105,7 @@ class OllamaAPI:
             "role": "system",
             "content": "\n<<DATA>>\n" + context + "\n<<END_DATA>>"
         }
+        self.logger.debug(f"Context: {context_system_prompt}")
         self.session_id_contexts[session_id] = context_system_prompt
 
         return session_id
