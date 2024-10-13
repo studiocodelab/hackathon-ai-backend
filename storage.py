@@ -33,12 +33,12 @@ class Storage:
     def store(self, filename: str, data: Any):
         """Store the data in the file."""
         self.logger.info(f"Storing {filename}")
-        self._add_file(filename, base64.b64encode(data.encode()))
+        self._add_file(filename, base64.b64decode(data.encode()))
 
     def retrieve(self, filename: str):
         """Retrieve the data from the file."""
         self.logger.info(f"Retrieving {filename}")
-        return base64.b64decode(self._get_file(filename))
+        return self._get_file(filename)
 
     def delete(self, filename: str):
         """Delete the file."""
