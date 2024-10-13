@@ -12,7 +12,7 @@ lg.basicConfig(
 )
 
 # Create a Flask app
-app = flask.Flask(__name__)
+app = flask.Flask(__name__, static_folder="stored_files")
 
 # Load the system prompt from a file
 with open("system_prompt.txt", "r") as f:
@@ -103,6 +103,22 @@ def retrieve():
         return flask.jsonify({"data": data.decode()})
     except KeyError:
         return flask.jsonify({"error": "File not found"})
+
+
+@app.route("/storage/download/<filename>", methods=["GET"])
+def download(filename):
+    """
+    Download endpoint for downloading data from the storage.
+
+    This endpoint accepts a GET request with a filename in the URL.
+    """
+    try:
+        data = storage.retrieve(filename)
+        storage._add_file(f"dl_{filename}", data)
+        flask.send_from_directory("stored_files/", f"dl_{filename}")
+    except KeyError:
+        return flask.jsonify({"error": "File not found"})
+    return flask.jsonify({"message": "File downloading"})
 
 
 @app.route("/storage/pop", methods=["POST"])
