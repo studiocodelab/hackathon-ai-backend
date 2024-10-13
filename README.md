@@ -88,12 +88,17 @@ Plik `system_prompt.txt` zawiera prompt systemowy.
 
 ### Wygenerowanie nowego ID sesji
 
-Zapytanie POST na `/new_session_id`
+Zapytanie POST na `/new_session_id` z JSON-em w formacie:
+```json
+{
+    "context": "KONTEKST (dane)"
+}
+```
 `http://localhost:5000/new_session_id`
 
 ### Zapytanie do Ollamy
 
-Zapytanie POST na `/ollama` z JSON-em w formacie:
+Zapytanie POST na `/chat` z JSON-em w formacie:
 ```json
 {
     "session_id": "ID_SESJI",
@@ -133,3 +138,7 @@ Zapytanie POST na `/storage/delete` z JSON-em w formacie:
 ### Pobranie listy plików w storage'u
 
 Zapytanie GET na `/storage/list`
+
+### Pobranie pliku z storage'u jako plik
+
+Zapytanie GET na `/stored_files/NAZWA_PLIKU`
